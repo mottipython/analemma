@@ -3,7 +3,7 @@
 A screensaver of the analemma in the Temple of Orithena, from Neal Stephenson's
 novel *Anathem*, set by the real date and time. Runs on Linux and Windows.
 
-![Noon: the light crosses the analemma](docs/screenshots/03-noon.jpg)
+![Noon: the light on the analemma](docs/screenshots/02-noon-today.jpg)
 
 ## The temple
 
@@ -16,23 +16,24 @@ That aut is what the avout now keep as Provener.
 
 ## What the screensaver shows
 
+The light is only ever shown at noon, which is the only time it is on the figure.
 Three things in turn, about two minutes in all:
 
-- **Now.** The temple at this moment, by your clock and calendar. If the sun is
-  high enough the shaft of light comes down from the hole to the floor, and the
-  scroll says how long it is until noon, or since. At night the temple is dark.
-- **Today, speeded up.** The spot sweeps across the floor from morning to evening,
-  slowing as it comes to the analemma and crossing it at noon, where the leader is
-  waiting. He raises his arms as the light reaches him.
+- **Now.** The temple at this moment, by your clock and calendar. The leader
+  stands where today's noon falls on the analemma, with a ring marking the place,
+  and the scroll says how long it is until noon, or since. If it is noon, the
+  light is there. At night the temple is dark.
+- **Noon today.** The shaft of light comes down from the hole onto today's place
+  on the figure. The leader raises his arms in it and the theors sing.
 - **A year of noons.** One noon after another, the spot goes all the way round the
   figure, leaving a trail of light, with the date counting along and the longest
   and shortest days and the two equal days called out. It ends back on today.
 
 | | |
 |---|---|
-| ![](docs/screenshots/01-now.jpg) | ![](docs/screenshots/02-morning.jpg) |
-| Now | Today: the light coming across the floor |
-| ![](docs/screenshots/05-a-year-of-noons.jpg) | ![](docs/screenshots/07-the-whole-figure.jpg) |
+| ![](docs/screenshots/01-now.jpg) | ![](docs/screenshots/02-noon-today.jpg) |
+| Now: waiting where today's noon falls | Noon today |
+| ![](docs/screenshots/03-a-year-of-noons.jpg) | ![](docs/screenshots/05-the-whole-figure.jpg) |
 | A year of noons | The whole figure traced |
 
 The figure is the true one. The spot is worked out from where the sun really is:
@@ -51,8 +52,8 @@ standing on the figure.
 Mine: Ecba's latitude, which the book does not give (I used 35 degrees north);
 putting the hole in the side of the dome that faces the sun, so that the whole
 figure falls on the floor all year; and using our own sun and year, since Arbre's
-are not described. The spot is only shown when it is on the floor: early and late
-in the day the sun is too low to reach it.
+are not described. Showing the light only at noon is a choice too: for the rest
+of the day the spot would be wandering across the floor away from the figure.
 
 ## Install
 

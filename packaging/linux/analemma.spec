@@ -12,8 +12,8 @@ The Temple of Orithena from Neal Stephenson's novel Anathem: a hole in the
 dome throws the sun on the floor, and at noon each day the spot of light falls
 on the analemma inlaid there.
 
-This screensaver shows where the spot is now, from the real date and time, then
-today from morning to evening, then a year of noons going round the figure.
+This screensaver shows the temple now, from the real date and time, then
+today's noon, then a year of noons going round the figure.
 
 On Wayland desktops it starts by itself after five minutes idle.
 analemma-screensaver changes the delay or turns it off.

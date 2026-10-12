@@ -1,9 +1,9 @@
 /*
  * analemma: screensaver of the analemma in the Temple of Orithena, from "Anathem".
  *
- * A hole in the dome throws the sun on the floor. The screensaver shows where the
- * spot is now, by the real date and time, then today from morning to evening, then
- * a year of noons going round the figure of eight inlaid in the floor.
+ * A hole in the dome throws the sun on the floor at noon. The screensaver shows the
+ * temple now, by the real date and time, then today's noon, then a year of noons
+ * going round the figure of eight inlaid in the floor.
  *
  *   analemma            full screen on every display; any key or mouse movement quits
  *   analemma --window   in a window; Esc or Q quits
@@ -258,10 +258,10 @@ static uint64_t seed_state;
 static double now_day, now_hours;  /* today as a day of the year (0 = 1 January), and the time by the clock */
 static int opt_day = -1;           /* --date: show this day instead of today */
 static double opt_hours = -1;      /* --at: show this time instead of now */
-#define T_DAY 12.0
-#define T_YEAR 54.0
-#define T_END 114.0
-#define ROUND 124.0
+#define T_DAY 11.0   /* noon today */
+#define T_YEAR 36.0  /* a year of noons */
+#define T_END 106.0
+#define ROUND 116.0
 #define NSING 12
 static struct { double x, y; int who; } singer[NSING];
 
@@ -285,8 +285,8 @@ static void read_time(void)
 }
 
 /* Where the spot of light falls on day `day` at `hours` by the clock. Returns 0 if
- * the sun is down or too low for its light to reach the floor; the spot is only
- * ever shown on the floor. *up gets the sun's height (sine). */
+ * the sun is down or too low for its light to reach the floor. Only noons are ever
+ * shown, so the spot is only ever seen on the floor and on the figure. *up gets the sun's height (sine). */
 static int spot(double day, double hours, double *x, double *y, double *up)
 {
     double b = 2 * M_PI * (day - 81) / 364;
@@ -397,16 +397,16 @@ static void draw_scene(SDL_Renderer *r, int w, int h)
     /* which moment is being shown */
     double day = now_day, hours = now_hours, year = 0;
     int mode = T < T_DAY ? 0 : T < T_YEAR ? 1 : 2, d, m;
-    if (mode == 1) {
-        /* today from when the light first reaches the floor to when it leaves, lingering at noon */
-        double x, y, first = 12, last = 12;
-        for (double q = 4; q < 20; q += 0.02) if (spot(day, q, &x, &y, NULL)) { if (first == 12 && q < 12) first = q; last = q; }
-        double p = ramp(T, T_DAY + 1, T_YEAR - 3) * 2 - 1, half = p < 0 ? 12.3 - first : last - 11.7;
-        hours = 12 + half * (0.3 * p + 0.7 * p * p * p);
-    } else if (mode == 2) {
+    /* The light is only ever shown at noon, which is the only time it is on the
+     * figure: now, if it is noon now; then today's noon; then every noon of the year. */
+    double shine = 1;
+    if (mode == 0) { shine = fabs(now_hours - 12) < 0.12 ? 1 : 0; hours = 12; }
+    else if (mode == 1) { hours = 12; shine = ramp(T, T_DAY + 1.5, T_DAY + 5) * (1 - ramp(T, T_YEAR - 2.5, T_YEAR - 0.5)); }
+    else {
         year = ramp(T, T_YEAR + 3, T_END);
         day = now_day + 365 * year;
         hours = 12;
+        shine = ramp(T, T_YEAR + 0.5, T_YEAR + 2.5);
     }
 
     /* the analemma, inlaid in brass: the noon spot for every day of the year */
@@ -430,12 +430,21 @@ static void draw_scene(SDL_Renderer *r, int w, int h)
     }
     flush(r);
 
-    double x = 0, y = 0, up = 0, lx, ly;
-    int on = spot(day, hours, &x, &y, &up);
+    double x = 0, y = 0, up = 0, lx, ly, sun_now = 0;
+    int on = spot(day, hours, &x, &y, &up) && shine > 0;
+    { double qx, qy; spot(now_day, now_hours, &qx, &qy, &sun_now); }
     spot(mode == 2 ? day : now_day, 12, &lx, &ly, NULL);      /* the leader stands where today's noon falls */
-    double near = on ? 1 - ramp(hypot(x - lx, y - ly), 0.04, 0.16) : 0;
-    double pw = w * FLOOR_RX * 0.2, ph = h * FLOOR_RY * 0.2, bright = on ? ramp(up, 0.02, 0.2) : 0;
+    double near = on ? shine : 0;
+    double pw = w * FLOOR_RX * 0.2, ph = h * FLOOR_RY * 0.2, bright = on ? shine : 0;
     if (on) light(SP_POOL, fsx(x, y), fsy(x, y), pw, ph, bright);
+    if (mode < 2 && shine < 1) { /* where today's noon falls, marked while the light is away */
+        double beat = 0.5 + 0.5 * sin(anim_t * 2.4), rr = 0.055 + 0.012 * beat;
+        for (int k = 0; k < 40; k++) {
+            double a0 = k * M_PI / 20, a1 = (k + 1) * M_PI / 20;
+            line(fsx(lx + cos(a0) * rr, ly + sin(a0) * rr), fsy(lx + cos(a0) * rr, ly + sin(a0) * rr),
+                 fsx(lx + cos(a1) * rr, ly + sin(a1) * rr), fsy(lx + cos(a1) * rr, ly + sin(a1) * rr), unit * 0.3, col(PAPER, (1 - shine) * (0.5 + 0.4 * beat)));
+        }
+    }
     /* people behind the shaft, the shaft, then the people in front of it */
     double spot_sy = on ? fsy(x, y) : -1;
     for (int pass = 0; pass < 2; pass++) {
@@ -454,23 +463,23 @@ static void draw_scene(SDL_Renderer *r, int w, int h)
         if (pass == 0 && on) shaft(fsx(x, y), spot_sy, pw * 0.8, 0.5 * bright);
     }
     flush(r);
-    if (!on && up <= 0.02) { rect(0, 0, w, h, (SDL_Color){8, 12, 34, 110}); flush(r); } /* night */
+    if (mode == 0 && sun_now <= 0.02) { rect(0, 0, w, h, (SDL_Color){8, 12, 34, 110}); flush(r); } /* night */
 
     date_of((int)floor(day + 0.5), &d, &m);
     if (mode == 0) {
         double to_noon = 12 - now_hours;
         int mins = (int)(fabs(to_noon) * 60 + 0.5);
         say1 = "THE TEMPLE OF ORITHENA";
-        if (mins < 2) snprintf(line2, sizeof line2, "%d %s. IT IS NOON", d, MONTH[m]);
+        if (on) snprintf(line2, sizeof line2, "%d %s. IT IS NOON", d, MONTH[m]);
         else snprintf(line2, sizeof line2, "%d %s, %02d:%02d. NOON %s %d H %02d MIN%s", d, MONTH[m], (int)now_hours, (int)(now_hours * 60) % 60,
                       to_noon > 0 ? "IS IN" : "WAS", mins / 60, mins % 60, to_noon > 0 ? "" : " AGO");
-        if (T > 6) { say1 = up <= 0.02 ? "THE SUN IS DOWN OVER ECBA" : on ? "THE HOLE IN THE DOME THROWS THE SUN ON THE FLOOR" : "THE SUN IS STILL TOO LOW TO REACH THE FLOOR";
-                     if (!on && up > 0.02 && now_hours > 12) say1 = "THE SUN IS NOW TOO LOW TO REACH THE FLOOR"; }
+        if (T > 5.5) say1 = on ? "THE LIGHT IS ON THE ANALEMMA" : sun_now <= 0.02 ? "THE SUN IS DOWN OVER ECBA" :
+                            to_noon > 0 ? "THE LEADER WAITS WHERE TODAY'S NOON WILL FALL" : "THE RING MARKS WHERE TODAY'S NOON FELL";
         say2 = line2;
     } else if (mode == 1) {
-        say1 = "TODAY, FROM MORNING TO EVENING";
-        if (near > 0.5) say2 = "NOON: THE LIGHT CROSSES THE ANALEMMA, AND THE THEORS SING";
-        else { snprintf(line2, sizeof line2, "%d %s, %02d:%02d", d, MONTH[m], (int)hours, (int)(hours * 60) % 60); say2 = line2; }
+        say1 = "NOON TODAY";
+        if (shine > 0.5) say2 = "THE LIGHT FALLS ON THE ANALEMMA, AND THE THEORS SING";
+        else { snprintf(line2, sizeof line2, "%d %s", d, MONTH[m]); say2 = line2; }
     } else {
         int dd = (int)floor(day + 0.5) % 365;
         say1 = year >= 1 ? "EVERY NOON OF THE YEAR HAS ITS PLACE ON THE FIGURE" : "A YEAR OF NOONS";
