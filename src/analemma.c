@@ -241,16 +241,17 @@ static void text(const char *str, double cx, double y, double s, double weight, 
  * analemma, the long figure of eight inlaid in the floor, and over a year it goes
  * all the way round it.
  *
- * The floor is a circle of radius 1 with x to the east and y to the north; we look
- * south across it, so north is nearest us and east is on the left. The hole is in
- * the southern slope of the dome. The sun is the real one: its height from the time
+ * The floor is a circle of radius 1 with x to the east and y to the north. The hole
+ * is to the south, which in the picture of the temple is on the far side, so the
+ * analemma runs across the floor from there towards us. The sun is the real one: its height from the time
  * of year, and its running fast or slow against the clock from the equation of
  * time, which is what gives the figure its two loops. */
 #define LATITUDE 35.0       /* degrees north; the book does not give one for Ecba */
-#define HOLE_Y (-0.55)      /* where the hole is above the floor, and how high */
-#define HOLE_H 0.75
+#define HOLE_Y (-0.90)      /* where the hole is above the floor, and how high: chosen so that */
+#define HOLE_H 0.85         /* the figure runs nearly the whole way across the floor */
 /* where the floor and the hole are in the picture of the temple, as fractions of it */
-static double FLOOR_CX = 0.5, FLOOR_CY = 0.70, FLOOR_RX = 0.40, FLOOR_RY = 0.22, HOLE_SX = 0.5, HOLE_SY = 0.2;
+static const double FLOOR_CX = 0.625, FLOOR_CY = 0.833, FLOOR_RX = 0.325, FLOOR_RY = 0.246, HOLE_SX = 0.6385, HOLE_SY = 0.417;
+static const double SOUTH_U = 0.04, SOUTH_V = 0.9992; /* which way south is on the floor: across the picture, and away from us */
 
 static double T, anim_t;
 static uint64_t seed_state;
@@ -284,7 +285,8 @@ static void read_time(void)
 }
 
 /* Where the spot of light falls on day `day` at `hours` by the clock. Returns 0 if
- * the sun is down or the light misses the floor. *up gets the sun's height (sine). */
+ * the sun is down or too low for its light to reach the floor; the spot is only
+ * ever shown on the floor. *up gets the sun's height (sine). */
 static int spot(double day, double hours, double *x, double *y, double *up)
 {
     double b = 2 * M_PI * (day - 81) / 364;
@@ -296,7 +298,7 @@ static int spot(double day, double hours, double *x, double *y, double *up)
     if (up) *up = u;
     if (u <= 0.02) return 0;
     *x = -HOLE_H * east / u; *y = HOLE_Y - HOLE_H * north / u;
-    return hypot(*x, *y) < 0.97;
+    return hypot(*x, *y) < 0.9; /* the whole pool of light on the floor, clear of the columns */
 }
 
 static void new_round(void)
@@ -306,8 +308,8 @@ static void new_round(void)
     /* the theors stand in two curved rows, one each side of the analemma */
     for (int i = 0; i < NSING; i++) {
         int side = i % 2 ? 1 : -1, k = i / 2;
-        singer[i].x = side * (0.34 + 0.05 * (k % 2) + 0.04 * frand() + 0.035 * fabs(k - 2.5) * fabs(k - 2.5) * 0.3);
-        singer[i].y = -0.3 + k * 0.19 + 0.03 * frand();
+        singer[i].x = side * (0.3 + 0.08 * (k % 2) + 0.03 * frand());
+        singer[i].y = -0.66 + k * 0.2 + 0.04 * frand();
         singer[i].who = (int)(frand() * 4) % 4;
     }
 }
@@ -322,8 +324,8 @@ static void update(double dt)
 /* ---- drawing ---- */
 static double unit;
 static int sw, sh;
-static double fsx(double x) { return sw * (FLOOR_CX - x * FLOOR_RX); }
-static double fsy(double y) { return sh * (FLOOR_CY + y * FLOOR_RY); }
+static double fsx(double x, double y) { return sw * (FLOOR_CX + (-x * SOUTH_V - y * SOUTH_U) * FLOOR_RX); }
+static double fsy(double x, double y) { return sh * (FLOOR_CY - (x * SOUTH_U - y * SOUTH_V) * FLOOR_RY); }
 
 static const char *MONTH[12] = {"JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"};
 static const int MDAYS[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -367,7 +369,7 @@ static void draw_caption(int w, int h, const char *l1, const char *l2)
     double widest = fmax(text_width(l1, s1), text_width(l2, s2)), room = w * 0.6;
     if (widest > room) { s1 *= room / widest; s2 *= room / widest; }
     double bw = fmax(text_width(l1, s1), text_width(l2, s2)) + unit * 13, bh = unit * 11.5;
-    double bx = w / 2.0 - bw / 2, by = h - unit * 0.8 - bh;
+    double bx = w / 2.0 - bw / 2, by = unit * 1.2; /* at the top: the floor is at the bottom */
     double cap = 0.135, cw = bh * 1.15 * sprite[SP_BANNER].w * cap / sprite[SP_BANNER].h;
     pic_part(SP_BANNER, bx + cw - 1, by, bw - 2 * cw + 2, bh, cap, 1 - cap, 0, 0);
     pic_part(SP_BANNER, bx, by, cw, bh, 0, cap, 0, 0);
@@ -378,10 +380,10 @@ static void draw_caption(int w, int h, const char *l1, const char *l2)
 
 static void person(int which, double x, double y, double lit)
 {
-    double sx = fsx(x), sy = fsy(y), tall = sh * 0.135 * (0.82 + 0.28 * (y + 1) / 2);
+    double sx = fsx(x, y), sy = fsy(x, y), tall = sh * 0.125 * (0.72 + 0.5 * (sy / sh - 0.58) / 0.42); /* larger towards us */
     disc(sx + tall * 0.05, sy, tall * 0.2, col(INK, 0.3), col(INK, 0));
     pic(which, sx, sy + tall * 0.04, tall, 0.5, 1);
-    if (lit > 0) light(SP_POOL, sx, sy - tall * 0.5, tall * 0.9, tall * 1.2, lit * 0.35);
+    if (lit > 0) light(SP_POOL, sx, sy - tall * 0.5, tall * 0.9, tall * 1.2, lit * 0.14);
 }
 
 static void draw_scene(SDL_Renderer *r, int w, int h)
@@ -412,40 +414,44 @@ static void draw_scene(SDL_Renderer *r, int w, int h)
         for (int k = 0; k < 365; k++) {
             double x0, y0, x1, y1;
             spot(k, 12, &x0, &y0, NULL); spot(k + 1, 12, &x1, &y1, NULL);
-            line(fsx(x0), fsy(y0), fsx(x1), fsy(y1), unit * (pass ? 0.28 : 0.5), pass ? col(BRASS, 1) : col(INK, 0.7));
+            line(fsx(x0, y0), fsy(x0, y0), fsx(x1, y1), fsy(x1, y1), unit * (pass ? 0.5 : 0.95), pass ? col(BRASS, 1) : col(INK, 0.8));
         }
     for (int mo = 0, k = 0; mo < 12; k += MDAYS[mo++]) { /* a stud at the first of each month */
         double x, y;
         spot(k, 12, &x, &y, NULL);
-        disc(fsx(x), fsy(y), unit * 0.42, col(INK, 0.8), col(INK, 0.8));
-        disc(fsx(x), fsy(y), unit * 0.28, col(BRASS, 1), col(PAPER, 1));
+        disc(fsx(x, y), fsy(x, y), unit * 0.62, col(INK, 0.85), col(INK, 0.85));
+        disc(fsx(x, y), fsy(x, y), unit * 0.42, col(PAPER, 1), col(BRASS, 1));
     }
     /* the noons of the year that have gone by so far */
     if (mode == 2) for (double q = 0; q < 365 * year; q += 2.5) {
         double x, y;
         spot(now_day + q, 12, &x, &y, NULL);
-        light(SP_POOL, fsx(x), fsy(y), w * FLOOR_RX * 0.05, h * FLOOR_RY * 0.05, 0.5);
+        light(SP_POOL, fsx(x, y), fsy(x, y), w * FLOOR_RX * 0.045, h * FLOOR_RY * 0.045, 0.55);
     }
     flush(r);
 
     double x = 0, y = 0, up = 0, lx, ly;
     int on = spot(day, hours, &x, &y, &up);
     spot(mode == 2 ? day : now_day, 12, &lx, &ly, NULL);      /* the leader stands where today's noon falls */
-    double near = on ? 1 - ramp(hypot(x - lx, (y - ly) * 0.6), 0.03, 0.14) : 0;
-    double pw = w * FLOOR_RX * 0.17, ph = h * FLOOR_RY * 0.17, bright = on ? ramp(up, 0.02, 0.2) : 0;
-    if (on) light(SP_POOL, fsx(x), fsy(y), pw, ph, bright);
+    double near = on ? 1 - ramp(hypot(x - lx, y - ly), 0.04, 0.16) : 0;
+    double pw = w * FLOOR_RX * 0.2, ph = h * FLOOR_RY * 0.2, bright = on ? ramp(up, 0.02, 0.2) : 0;
+    if (on) light(SP_POOL, fsx(x, y), fsy(x, y), pw, ph, bright);
     /* people behind the shaft, the shaft, then the people in front of it */
+    double spot_sy = on ? fsy(x, y) : -1;
     for (int pass = 0; pass < 2; pass++) {
-        for (int j = 0; j < 40; j++) { /* from the far side of the floor to the near */
-            double y0 = -1 + j * 0.05, y1 = y0 + 0.05;
-            if ((y0 < (on ? y : 9)) != (pass == 0)) continue;
-            for (int i = 0; i < NSING; i++) if (singer[i].y >= y0 && singer[i].y < y1) {
-                double sway = near * sin(anim_t * 2.2 + i) * 0.006;
-                person(SP_SING1 + singer[i].who, singer[i].x + sway, singer[i].y, 0);
+        for (int j = 0; j < 60; j++) { /* from the far side of the floor to the near */
+            double s0 = h * (0.4 + j / 80.0), s1 = s0 + h / 80.0;
+            if ((s0 < spot_sy) != (pass == 0) && on) continue;
+            if (!on && pass) continue;
+            for (int i = 0; i < NSING; i++) {
+                double py = fsy(singer[i].x, singer[i].y);
+                if (py < s0 || py >= s1) continue;
+                person(SP_SING1 + singer[i].who, singer[i].x + near * sin(anim_t * 2.2 + i) * 0.006, singer[i].y, 0);
             }
-            if (ly >= y0 && ly < y1) person(near > 0.5 ? SP_LEAD_UP : SP_LEAD_WAIT, lx, ly, near);
+            double py = fsy(lx, ly);
+            if (py >= s0 && py < s1) person(near > 0.5 ? SP_LEAD_UP : SP_LEAD_WAIT, lx, ly, near);
         }
-        if (pass == 0 && on) shaft(fsx(x), fsy(y), pw * 0.8, 0.55 * bright);
+        if (pass == 0 && on) shaft(fsx(x, y), spot_sy, pw * 0.8, 0.5 * bright);
     }
     flush(r);
     if (!on && up <= 0.02) { rect(0, 0, w, h, (SDL_Color){8, 12, 34, 110}); flush(r); } /* night */
@@ -458,8 +464,8 @@ static void draw_scene(SDL_Renderer *r, int w, int h)
         if (mins < 2) snprintf(line2, sizeof line2, "%d %s. IT IS NOON", d, MONTH[m]);
         else snprintf(line2, sizeof line2, "%d %s, %02d:%02d. NOON %s %d H %02d MIN%s", d, MONTH[m], (int)now_hours, (int)(now_hours * 60) % 60,
                       to_noon > 0 ? "IS IN" : "WAS", mins / 60, mins % 60, to_noon > 0 ? "" : " AGO");
-        if (T > 6) { say1 = up <= 0.02 ? "THE SUN IS DOWN OVER ECBA" : on ? "THE HOLE IN THE DOME THROWS THE SUN ON THE FLOOR" : "THE LIGHT IS ON THE WALL, NOT YET ON THE FLOOR";
-                     if (!on && up > 0.02 && now_hours > 12) say1 = "THE LIGHT HAS LEFT THE FLOOR FOR THE WALL"; }
+        if (T > 6) { say1 = up <= 0.02 ? "THE SUN IS DOWN OVER ECBA" : on ? "THE HOLE IN THE DOME THROWS THE SUN ON THE FLOOR" : "THE SUN IS STILL TOO LOW TO REACH THE FLOOR";
+                     if (!on && up > 0.02 && now_hours > 12) say1 = "THE SUN IS NOW TOO LOW TO REACH THE FLOOR"; }
         say2 = line2;
     } else if (mode == 1) {
         say1 = "TODAY, FROM MORNING TO EVENING";

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=The Analemma screensaver
+Comment=Start the analemma when the session has been idle
+Exec=analemma-screensaver watch
+Icon=analemma
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

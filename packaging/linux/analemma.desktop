@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=The Analemma
+Comment=The sun on the floor of the Temple of Orithena, by the real date and time
+Exec=analemma --window
+Icon=analemma
+Categories=Game;LogicGame;Education;Math;
+Keywords=Anathem;Orithena;sun;sundial;screensaver;

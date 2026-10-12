@@ -1,5 +1,5 @@
 # The Analemma - a screensaver of the Temple of Orithena from Neal Stephenson's "Anathem"
-VERSION  := 0.1.0
+VERSION  := 1.0.0
 PREFIX   ?= /usr
 SYSCONFDIR ?= /etc
 DESTDIR  ?=

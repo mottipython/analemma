@@ -1,0 +1,18 @@
+Package: analemma
+Version: @VERSION@
+Section: games
+Priority: optional
+Architecture: @ARCH@
+Depends: libc6 (>= 2.38), libsdl2-2.0-0 (>= 2.0.18), swayidle
+Installed-Size: @SIZE@
+Maintainer: Motti Schleider <motti.schleider@gmail.com>
+Description: The analemma at Orithena, a screensaver from "Anathem"
+ The Temple of Orithena from Neal Stephenson's novel Anathem: a hole in the
+ dome throws the sun on the floor, and at noon each day the spot of light falls
+ on the analemma inlaid there.
+ .
+ This screensaver shows where the spot is now, from the real date and time, then
+ today from morning to evening, then a year of noons going round the figure.
+ .
+ On Wayland desktops it starts by itself after five minutes idle.
+ analemma-screensaver changes the delay or turns it off.
