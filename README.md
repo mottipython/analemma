@@ -36,12 +36,37 @@ Three things in turn, about two minutes in all:
 | ![](docs/screenshots/03-a-year-of-noons.jpg) | ![](docs/screenshots/05-the-whole-figure.jpg) |
 | A year of noons | The whole figure traced |
 
-The figure is the true one. The spot is worked out from where the sun really is:
-its height from the time of year, and its running ahead of the clock or behind it
-(the equation of time), which is what makes the curve a figure of eight and not a
-straight line. The brass studs on it mark the first of each month. Noon here means
-twelve by your clock; summer time and where you are in your time zone are not
-allowed for.
+## The science
+
+The figure is the true one, worked out and not drawn by eye.
+
+- **Where the sun is.** For each day the program finds the sun's place by the
+  Astronomical Almanac's short method (mean longitude, mean anomaly, the tilt of
+  the axis), which is good to about a hundredth of a degree. From that come the two
+  things that make an analemma: how far north or south of the equator the sun is
+  that day, and the equation of time, which is how far the real sun runs ahead of
+  a steady clock or behind it.
+- **Why a figure of eight.** If the sun kept perfect time, the noon spot would only
+  move up and down one straight line through the year. Because it runs up to 16
+  minutes fast in early November and 14 minutes slow in February, the spot is
+  carried to one side and then the other, and the line opens into two loops.
+- **Where the spot falls.** A ray from the sun through the hole lands on the floor
+  beyond the hole, as far away as the hole is high divided by the tangent of the
+  sun's height. High summer sun puts it close under the hole; low winter sun
+  throws it far across the floor. Low sun also draws the round image out into an
+  oval, and it is drawn that way.
+
+Checked against the almanac: the ends of the figure are the solstices (21 June and
+21 December), the two loops cross on 12 April and 30 August, the spot is on the
+centre line on 15 April, 12 June, 1 September and 24 December, it is furthest
+east on 8 November and furthest west on 6 February, and the figure is seven times
+as long as it is wide, with the summer loop much the smaller. Those are the right
+dates and proportions for our sun at this latitude.
+
+Two things it cannot know. Noon here is twelve by your clock, with summer time
+taken off; where you are within your time zone is not allowed for, so real noon
+where you live may be up to half an hour or so either side. And the brass studs
+mark the first of each month in a year of 365 days.
 
 ### What is from the book and what is mine
 
@@ -61,7 +86,7 @@ Packages are on the [releases page](../../releases).
 
 ### Windows
 
-Run `Analemma-Setup-1.0.0.exe`. It asks for administrator rights, because Windows
+Run `Analemma-Setup-1.0.1.exe`. It asks for administrator rights, because Windows
 only lists screensavers that are in its own system folder. After that "The Analemma" is in Screen Saver Settings with the others, already selected. Uninstall from
 Apps.
 
@@ -69,11 +94,11 @@ Apps.
 
 **Fedora, Nobara** (built on Fedora 44):
 
-    sudo dnf install ./analemma-1.0.0-1.fc44.x86_64.rpm
+    sudo dnf install ./analemma-1.0.1-1.fc44.x86_64.rpm
 
 **Debian, Ubuntu, Mint** (Ubuntu 24.04 / Debian 13 or later):
 
-    sudo apt install ./analemma_1.0.0_amd64.deb
+    sudo apt install ./analemma_1.0.1_amd64.deb
 
 From your next login it starts by itself after five minutes idle, and any key or
 mouse movement ends it. To start the watcher without logging out, or to change the

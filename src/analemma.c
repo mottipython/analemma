@@ -256,6 +256,8 @@ static const double SOUTH_U = 0.04, SOUTH_V = 0.9992; /* which way south is on t
 static double T, anim_t;
 static uint64_t seed_state;
 static double now_day, now_hours;  /* today as a day of the year (0 = 1 January), and the time by the clock */
+static double now_clock;           /* the time as the clock shows it, summer time and all */
+static int now_year = 2026;        /* for the sun; the figure shifts very slightly from year to year */
 static int opt_day = -1;           /* --date: show this day instead of today */
 static double opt_hours = -1;      /* --at: show this time instead of now */
 #define T_DAY 11.0   /* noon today */
@@ -280,6 +282,10 @@ static void read_time(void)
     struct tm *tm = localtime(&tt);
     now_day = tm ? tm->tm_yday : 0;
     now_hours = tm ? tm->tm_hour + tm->tm_min / 60.0 + tm->tm_sec / 3600.0 : 12;
+    if (opt_hours >= 0) now_hours = opt_hours;
+    now_clock = now_hours;
+    if (tm) now_year = tm->tm_year + 1900;
+    if (tm && tm->tm_isdst > 0 && opt_hours < 0) now_hours -= 1; /* the sun does not keep summer time */
     if (opt_day >= 0) now_day = opt_day;
     if (opt_hours >= 0) now_hours = opt_hours;
 }
@@ -289,9 +295,15 @@ static void read_time(void)
  * shown, so the spot is only ever seen on the floor and on the figure. *up gets the sun's height (sine). */
 static int spot(double day, double hours, double *x, double *y, double *up)
 {
-    double b = 2 * M_PI * (day - 81) / 364;
-    double eot = 9.87 * sin(2 * b) - 7.53 * cos(b) - 1.5 * sin(b);   /* minutes the sun is ahead of the clock */
-    double decl = 23.45 * M_PI / 180 * sin(2 * M_PI * (284 + day + 1) / 365);
+    /* The sun by the Astronomical Almanac's short method, good to about a hundredth
+     * of a degree: n is days from noon on 1 January 2000, L the mean longitude, g the
+     * mean anomaly, lam the longitude along the ecliptic, eps the tilt of the axis. */
+    double n = (now_year - 2000) * 365 + floor((now_year - 2000 + 3) / 4.0) + day, rad = M_PI / 180;
+    double L = fmod(280.460 + 0.9856474 * n, 360), g = fmod(357.528 + 0.9856003 * n, 360) * rad;
+    double lam = (L + 1.915 * sin(g) + 0.020 * sin(2 * g)) * rad, eps = (23.439 - 0.0000004 * n) * rad;
+    double decl = asin(sin(eps) * sin(lam));
+    /* the equation of time: how far the real sun is ahead of a steady one, in minutes */
+    double eot = 4 * (fmod(L - atan2(cos(eps) * sin(lam), cos(lam)) / rad + 540, 360) - 180);
     double ha = (15 * (hours - 12) + eot / 4) * M_PI / 180, lat = LATITUDE * M_PI / 180;
     double u = sin(lat) * sin(decl) + cos(lat) * cos(decl) * cos(ha);
     double north = cos(lat) * sin(decl) - sin(lat) * cos(decl) * cos(ha), east = -cos(decl) * sin(ha);
@@ -436,7 +448,9 @@ static void draw_scene(SDL_Renderer *r, int w, int h)
     spot(mode == 2 ? day : now_day, 12, &lx, &ly, NULL);      /* the leader stands where today's noon falls */
     double near = on ? shine : 0;
     double pw = w * FLOOR_RX * 0.2, ph = h * FLOOR_RY * 0.2, bright = on ? shine : 0;
-    if (on) light(SP_POOL, fsx(x, y), fsy(x, y), pw, ph, bright);
+    /* the image of the sun is round only when the sun is overhead; lower down it is
+     * drawn out along the floor, away from the hole */
+    if (on) light(SP_POOL, fsx(x, y), fsy(x, y), pw, ph / fmax(up, 0.45), bright);
     if (mode < 2 && shine < 1) { /* where today's noon falls, marked while the light is away */
         double beat = 0.5 + 0.5 * sin(anim_t * 2.4), rr = 0.055 + 0.012 * beat;
         for (int k = 0; k < 40; k++) {
@@ -471,7 +485,7 @@ static void draw_scene(SDL_Renderer *r, int w, int h)
         int mins = (int)(fabs(to_noon) * 60 + 0.5);
         say1 = "THE TEMPLE OF ORITHENA";
         if (on) snprintf(line2, sizeof line2, "%d %s. IT IS NOON", d, MONTH[m]);
-        else snprintf(line2, sizeof line2, "%d %s, %02d:%02d. NOON %s %d H %02d MIN%s", d, MONTH[m], (int)now_hours, (int)(now_hours * 60) % 60,
+        else snprintf(line2, sizeof line2, "%d %s, %02d:%02d. NOON %s %d H %02d MIN%s", d, MONTH[m], (int)now_clock, (int)(now_clock * 60) % 60,
                       to_noon > 0 ? "IS IN" : "WAS", mins / 60, mins % 60, to_noon > 0 ? "" : " AGO");
         if (T > 5.5) say1 = on ? "THE LIGHT IS ON THE ANALEMMA" : sun_now <= 0.02 ? "THE SUN IS DOWN OVER ECBA" :
                             to_noon > 0 ? "THE LEADER WAITS WHERE TODAY'S NOON WILL FALL" : "THE RING MARKS WHERE TODAY'S NOON FELL";
