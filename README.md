@@ -1,7 +1,7 @@
 # The Analemma
 
 A screensaver of the analemma in the Temple of Orithena, from Neal Stephenson's
-novel *Anathem*, set by the real date and time. Runs on Linux, Windows and macOS.
+novel *Anathem*, set by the real date and time. Runs on Linux, Windows and macOS. One of the [Anathem screensavers](https://github.com/mottipython/anathem-screensavers).
 
 ![Noon: the light on the analemma](docs/screenshots/02-noon-today.jpg)
 
