@@ -1,7 +1,7 @@
 # The Analemma
 
 A screensaver of the analemma in the Temple of Orithena, from Neal Stephenson's
-novel *Anathem*, set by the real date and time. Runs on Linux and Windows.
+novel *Anathem*, set by the real date and time. Runs on Linux, Windows and macOS.
 
 ![Noon: the light on the analemma](docs/screenshots/02-noon-today.jpg)
 
@@ -89,6 +89,19 @@ Packages are on the [releases page](../../releases).
 Run `Analemma-Setup-1.0.1.exe`. It asks for administrator rights, because Windows
 only lists screensavers that are in its own system folder. After that "The Analemma" is in Screen Saver Settings with the others, already selected. Uninstall from
 Apps.
+
+### macOS
+
+Download `The-Analemma-…-mac.zip` from the releases page, unzip it, and open the app. It
+runs full screen; any key or a click ends it. It is built for Apple Silicon and
+Intel, macOS 11 or later.
+
+The app is not signed with an Apple developer certificate, so the first time macOS
+will refuse to open it. Right-click the app and choose Open, or allow it under
+System Settings, Privacy & Security. For now it is an ordinary app and not a screen
+saver module, so it does not appear in the Screen Saver settings. The Mac build is
+made and run on a build machine but has not been tried by a person on a real Mac;
+reports are welcome.
 
 ### Linux
 
